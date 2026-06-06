@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Raghu College Chatbot</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <div class="chat-wrapper">
+
+    <div class="chat-header">
+      <div class="header-left">
+        <div class="avatar">RC</div>
+        <div>
+          <p class="header-title">Raghu College Assistant</p>
+          <p class="header-sub">Ask anything about college documents</p>
+        </div>
+      </div>
+      <button class="clear-btn" id="clearBtn" title="Clear chat">
+        Clear Chat
+      </button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="message bot-message">
+        <p>Hello! I'm your Raghu Engineering College assistant. Ask me anything about fees, academics, rules, or college documents.</p>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <input
+        type="text"
+        id="userInput"
+        placeholder="Type your question..."
+        autocomplete="off"
+      />
+      <button id="sendBtn">Send</button>
+    </div>
+
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
