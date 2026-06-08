@@ -1,79 +1,98 @@
-# DomainSpecificRAGChatBot
-Domain‑specific RAG chatbot for Raghu Engineering College using Flask, FAISS, and Gemini.
+#  College RAG Chatbot
 
-# Raghu Engineering College RAG Chatbot
-
-A domain-specific AI chatbot that answers questions about **Raghu Engineering College** using official college documents (AQAR reports, regulations, etc.).  
-It uses **Retrieval-Augmented Generation (RAG)** with LangChain, FAISS, Hugging Face embeddings, and Google's **Gemini** models to provide accurate, source-backed answers from your PDFs
+> A domain-specific AI chatbot that answers questions from college documents using **Retrieval-Augmented Generation (RAG)** — powered by Google Gemini, LangChain, FAISS, and Flask.
 
 ---
 
-## What this project does
+##  Problem It Solves
 
-- Lets students and staff ask questions in natural language such as:
-  - "What are the attendance rules?"
-  - "Tell me about the AQAR 2022–23 highlights."
-- Loads college PDFs from the `docs/` folder, splits them into chunks, creates vector embeddings, and stores them in a **FAISS** vector store. 
-- On each user query:
-  1. Embeds the question and retrieves the top relevant chunks from FAISS.
-  2. Sends those chunks + the question (and chat history) to **Gemini 2.5 Flash**.
-  3. Returns a clear answer plus the source PDF file used for that answer. 
+Students and staff often struggle to find specific information buried inside large college PDF documents — handbooks, academic reports, maintenance records, AQAR reports, and more. Manually searching through hundreds of pages is time-consuming and frustrating.
+
+This chatbot solves that by letting users **ask natural language questions** and get **instant, accurate answers grounded in the actual college documents** — with the source PDF cited for every answer. Users can also **upload their own PDFs** and chat with any document on the fly.
 
 ---
 
-##  Tech stack
+##  How It Works (RAG Pipeline)
 
-- **Backend:** Python, Flask
-- **AI / RAG:**
-  - LangChain community loaders & vectorstores
-  - FAISS for vector search
-  - `sentence-transformers/all-MiniLM-L6-v2` for text embeddings 
-  - Google Gen AI (Gemini 2.5 Flash) for answer generation 
-- **Frontend:** HTML, CSS, vanilla JavaScript
-- **Config:** `.env` for `GOOGLE_API_KEY`
+```
+PDF Documents → Chunking → Embeddings → FAISS Vector Store
+                                                  ↓
+User Question → Embed Question → Similarity Search → Top 3 Chunks
+                                                          ↓
+                                         Gemini 2.5 Flash → Answer + Source
+```
+
+1. Indexing — PDFs are loaded, split into 500-character chunks, embedded using `all-MiniLM-L6-v2`, and stored in a FAISS vector index.
+2. Retrieval — When a user asks a question, the top 3 most semantically similar chunks are retrieved from FAISS.
+3. Generation — The retrieved chunks + conversation history are passed to Gemini 2.5 Flash, which generates a grounded answer.
 
 ---
 
-## Project structure
+##  Tech Stack
 
-```text
-COLLEGE-RAG-CHATBOT/
-├─ docs/                 # Input PDFs (AQAR, regulations, etc.)
-│  ├─ 2022-23_AQAR.pdf
-│  ├─ AR-23-ACADEMIC-R....pdf
-│  └─ ...
-├─ vectorstore/          # Saved FAISS index (auto-created)
-│  ├─ index.faiss
-│  └─ index.pkl
-├─ templates/
-│  └─ index.html         # Chat UI page
-├─ static/
-│  ├─ style.css          # Chat UI styles
-│  └─ script.js          # Frontend chat logic
-├─ create_vector_db.py   # Builds the FAISS vector store from PDFs
-├─ app.py                # Flask app with RAG + Gemini + chat history
-├─ .env                  # Contains GOOGLE_API_KEY (not committed)
-├─ requirements.txt      # Python dependencies
-└─ README.md
+| Layer |                     | Technology |
+
+| LLM|                   | Google Gemini 2.5 Flash (`google-genai`) |
+| Embeddings |           |`sentence-transformers/all-MiniLM-L6-v2` via `langchain-huggingface` |
+| Vector Store|          |FAISS (Facebook AI Similarity Search) |
+| Orchestration|         |LangChain |
+| Backend|               | Python + Flask |
+| Frontend |             | HTML, CSS, JavaScript (vanilla) |
+| PDF Parsing |          | PyPDFLoader (LangChain) |
+| Environment |          |python-dotenv |
+
+---
+
+##  Project Structure
+
+```
+collegeRAGassistent/
+│
+├── docs/                        # College PDF documents (knowledge base)
+│   ├── 2022-23_AQAR.pdf
+│   ├── AR-23-ACADEMIC-R.pdf
+│   └── raghuclgmaintanen.pdf
+│
+├── vectorstore/                 # Auto-generated FAISS index (do not edit)
+│   ├── index.faiss
+│   └── index.pkl
+│
+├── static/
+│   ├── style.css                # Chat UI styles
+│   └── script.js                # Frontend logic
+│
+├── templates/
+│   └── index.html               # Chat interface
+│
+├── app.py                       # Flask server + RAG pipeline
+├── create_vector_db.py          # One-time script to build FAISS index
+├── rag_gemini_test.py           # Test script for Gemini + RAG
+├── test_rag.py                  # Test script for retrieval
+├── requirements.txt             # Python dependencies
+└── .env                         # API keys (not committed to Git)
 ```
 
 ---
 
-##  Setup and installation
+##  Setup Instructions
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/college-rag-chatbot.git
-cd college-rag-chatbot
+git clone https://github.com/your-username/collegeRAGassistent.git
+cd collegeRAGassistent
 ```
 
-### 2. Create and activate a virtual environment (optional but recommended)
+### 2. Create a virtual environment
 
 ```bash
 python -m venv venv
-venv/Scripts/activate   # On Windows
-# source venv/bin/activate  # On macOS / Linux
+
+# Windows
+venv\Scripts\activate
+
+# Mac / Linux
+source venv/bin/activate
 ```
 
 ### 3. Install dependencies
@@ -82,134 +101,124 @@ venv/Scripts/activate   # On Windows
 pip install -r requirements.txt
 ```
 
-Dependencies include Flask, LangChain community packages, FAISS, Hugging Face embeddings, python-dotenv, and the Google Gen AI SDK. 
+### 4. Add your Google Gemini API key
 
-### 4. Add your PDFs
+Create a `.env` file in the root folder:
 
-- Put all your college documents (AQAR, regulations, etc.) into the `docs/` folder as `.pdf` files.
-
-### 5. Configure API key
-
-Create a `.env` file in the project root:
-
-```env
+```
 GOOGLE_API_KEY=your_gemini_api_key_here
 ```
 
-You can get a Gemini API key from Google AI Studio / Google Gen AI documentation. 
+Get your free API key at [https://aistudio.google.com](https://aistudio.google.com)
 
----
+### 5. Add your PDF documents
 
-## 🧩 Step 1: Build the vector store
+Place your PDF files inside the `docs/` folder.
 
-Run:
+### 6. Build the vector database (run once)
 
 ```bash
 python create_vector_db.py
 ```
 
-What this script does:
+This reads all PDFs in `docs/`, creates embeddings, and saves the FAISS index to `vectorstore/`.
 
-- Loads all PDFs from `docs/` using `PyPDFLoader`. 
-- Splits them into chunks (~500 characters with overlap) using `RecursiveCharacterTextSplitter`. 
-- Embeds each chunk with `sentence-transformers/all-MiniLM-L6-v2`. 
-- Stores embeddings in a **FAISS** index and saves it into the `vectorstore/` folder. 
-
-You should see messages like:
-
-- `Loading: 2022-23_AQAR.pdf`
-- `Loaded X pages`
-- `Created Y chunks`
-- `✅ Vector database created successfully!`
-
----
-
-##  Step 2: Run the chatbot
-
-Start the Flask server:
+### 7. Run the chatbot
 
 ```bash
 python app.py
 ```
 
-- The app runs by default at `http://127.0.0.1:5000/` (or `http://localhost:5000/`).
-- Open this URL in your browser.
+Open your browser at **http://127.0.0.1:5000**
 
 ---
 
-##  How the web UI works
+##  Features
 
-The frontend (in `templates/index.html`, `static/style.css`, `static/script.js`) provides a simple chat interface:
-
-- **index.html**
-  - Chat card with header (`Raghu College Assistant`), messages area, input box, and buttons.
-
-- **style.css**
-  - Modern chat design with:
-    - Left‑aligned gray bot messages
-    - Right‑aligned blue user messages
-    - Typing indicator with animated dots
-    - Clear chat button and responsive layout
-
-- **script.js**
-  - Sends the user’s question to `/chat` via POST (`fetch("/chat", {...})`).
-  - Shows a “typing…” indicator while waiting for the response.
-  - Displays the bot’s reply and a **Source: filename.pdf** tag.
-  - Calls `/reset` when **Clear Chat** is clicked to reset conversation memory.
+- Natural language Q&A over college PDF documents
+- Upload your own PDF and chat with any document instantly
+- Chat history memory — supports follow-up questions in context
+- Source citation — every answer shows which PDF it came from
+- Switch modes — toggle between college docs and your uploaded PDF
+- Clear chat — reset conversation history with one click
+- Responsive UI — works on mobile and desktop
 
 ---
 
-##  RAG + chat history flow
+##  requirements.txt
 
-1. User types a question in the UI and clicks **Send**.
-2. Frontend sends `{ "message": "..." }` to `/chat`.
-3. Backend (Flask) does the following:
-   - Adds the new question to an in‑memory `chat_history` list.
-   - Uses FAISS `similarity_search` to retrieve the top 3 relevant chunks from the vector store.
-   - Builds a prompt that includes:
-     - Conversation history so far
-     - Retrieved context from college documents
-     - The current question
-     - Instructions: “Answer ONLY using the provided context. If the answer is not in the context, say ‘I don’t have that information.’”
-   - Sends this prompt to **Gemini 2.5 Flash** using the Google Gen AI Python SDK. 
-   - Gets the model’s answer and appends it to `chat_history`.
-   - Returns JSON: `{ reply: answer, source: first_source_file }`.
-
-4. Frontend displays the answer and the source tag under the message.
-
-5. `/reset` endpoint clears `chat_history` so the next conversation starts fresh.
+```
+flask
+python-dotenv
+google-genai
+langchain
+langchain-huggingface
+langchain-community
+faiss-cpu
+sentence-transformers
+pypdf
+```
 
 ---
 
-## ✅ Features
+##  Environment Variables
 
-- Uses **official college PDFs** as the only knowledge base.
-- **Reduces hallucinations** by forcing the model to answer only from retrieved context.
-- Shows **source file name** for every answer.
-- Maintains **chat history** to support follow‑up questions.
-- Clean, responsive **chat UI** built with HTML/CSS/JS.
-- Easy to extend with more documents—just add PDFs and rebuild the vector store.
+| Variable | Description |
+
+| `GOOGLE_API_KEY`  --> Your Google Gemini API key from AI Studio |
+
+> ⚠️ Never commit your `.env` file to GitHub. Add it to `.gitignore`.
 
 ---
 
-##  Possible improvements
+##  Example Questions to Ask
 
-- Show multiple source files instead of only the first one.
-- Highlight the exact paragraph used in the answer.
-- Add authentication (e.g., only for college students/staff).
-- Deploy to a cloud platform (Render, Railway, or any VPS) and secure the `.env` file.
+**Basic factual questions**
+
+What is the vision and mission of Raghu Engineering College?
+What are the departments available in the college?
+What is the NAAC accreditation status of the college?
+
+**Academic questions**
+
+What are the rules for attendance?
+What is the minimum CGPA required to pass?
+How many credits are required to complete the degree?
+
+**Testing RAG retrieval**
+
+What activities were conducted under the IQAC?
+What are the research publications mentioned in the report?
+How many students were placed in the academic year 2022-23?
+
+**Testing chat memory (ask these one after another)**
+
+How many students are enrolled in CSE?
+What percentage of them got placed?
+Which companies recruited the most from that branch?
+
+---
+
+##  Future Improvements
+
+-  Deploy on Render / Railway (free cloud hosting)
+-  Add support for multiple simultaneous PDFs
+-  Add thumbs up / down feedback on answers
+-  Persistent chat history using SQLite
+-  Multi-language support
 
 ---
 
 ##  Author
 
-- Name: THADELA NIHARIKA  
-- Location:Visakhapatnam,AndhraPradesh, India  
-- GitHub: `(https://github.com/Niha-868)` (update this)
+**Niharika**
+B.Tech CSE (AI & ML) — Raghu Engineering College, Visakhapatnam
+
+<img width="483" height="524" alt="image" src="https://github.com/user-attachments/assets/888aa501-44fe-421f-b040-10edac4fef0e" />
+
 
 ---
 
 ##  License
 
-This project is for educational and internal use.  
-You can choose a license such as **MIT** or **Apache-2.0** and update this section.
+This project is open source and available under the [MIT License](LICENSE).
